@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alorica Ops Support · Advanced Diagnostics Training</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+    }
+
+    body {
+      background: #f1f5f9;
+      color: #0b1e33;
+      min-height: 100vh;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .screen { display: none; width: 100%; min-height: 100vh; }
+    .screen.active { display: flex; flex-direction: column; }
+
+    /* ---------- LOGIN ---------- */
+    #login-screen {
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(145deg, #002d5a 0%, #004685 100%);
+    }
+
+    .login-card {
+      background: white;
+      padding: 2.5rem 2.8rem;
+      border-radius: 28px;
+      box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.45);
+      width: 100%;
+      max-width: 460px;
+      transition: 0.2s;
+    }
+
+    .brand-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .brand-header h1 {
+      color: #004685;
+      font-weight: 700;
+      font-size: 2.1rem;
+      letter-spacing: 0.5px;
+    }
+    .brand-header p {
+      color: #475569;
+      font-weight: 600;
+      font-size: 0.85rem;
+      margin-top: 4px;
+    }
+
+    .form-group { margin-bottom: 1.4rem; }
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      color: #1e293b;
+      font-size: 0.9rem;
+      margin-bottom: 0.3rem;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border: 1.5px solid #d1d9e6;
+      border-radius: 14px;
+      font-size: 1rem;
+      background: #fafcff;
+      transition: 0.15s;
+    }
+    .form-group input:focus {
+      border-color: #004685;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0, 70, 133, 0.2);
+    }
+
+    .btn {
+      background: #004685;
+      color: white;
+      border: none;
+      padding: 0.85rem 1.5rem;
+      border-radius: 40px;
+      font-size: 1rem;
+      font-weight: 700;
+      width: 100%;
+      cursor: pointer;
+      transition: 0.2s;
+      letter-spacing: 0.4px;
+    }
+    .btn:hover { background: #0066aa; transform: scale(1.01); }
+
+    #login-error {
+      color: #b91c1c;
+      background: #fee2e2;
+      padding: 0.5rem 1rem;
+      border-radius: 40px;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+      display: none;
+      text-align: center;
+    }
+
+    /* ---------- SECURITY BANNER ---------- */
+    .security-banner {
+      background: #0b1e33;
+      color: #e2e8f0;
+      padding: 0.5rem 2rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #1e3a5f;
+      letter-spacing: 0.3px;
+    }
+    #p-status { color: #4ade80; }
+
+    /* ---------- HEADER ---------- */
+    header {
+      background: #004685;
+      color: white;
+      padding: 0.9rem 2.2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 10px -4px rgba(0, 0, 0, 0.2);
+    }
+    header h2 { font-weight: 600; font-size: 1.3rem; }
+    header small { font-weight: 400; opacity: 0.8; font-size: 0.8rem; }
+
+    .progress-container {
+      width: 100%;
+      height: 6px;
+      background: #cbd5e1;
+      position: sticky;
+      top: 64px;
+      z-index: 99;
+    }
+    .progress-bar {
+      width: 0%;
+      height: 100%;
+      background: #f97316;
+      transition: width 0.35s ease;
+    }
+
+    .main-container {
+      display: flex;
+      gap: 2rem;
+      padding: 2rem 2rem 3rem;
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+      flex: 1;
+    }
+
+    .content-area { flex: 3; }
+
+    .sidebar {
+      flex: 1;
+      background: white;
+      padding: 1.5rem;
+      border-radius: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      height: fit-content;
+      position: sticky;
+      top: 100px;
+      border: 1px solid #e9eef3;
+    }
+
+    .card {
+      background: white;
+      padding: 1.8rem 2rem;
+      border-radius: 24px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      margin-bottom: 2rem;
+      border: 1px solid #eef2f6;
+    }
+    .card h2 {
+      color: #004685;
+      font-size: 1.2rem;
+      font-weight: 700;
+      border-bottom: 2px solid #eef2f6;
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.2rem;
+    }
+
+    pre, code {
+      background: #0b1e33;
+      color: #7dd3fc;
+      padding: 0.8rem 1.2rem;
+      border-radius: 14px;
+      font-family: 'JetBrains Mono', 'Consolas', monospace;
+      font-size: 0.85rem;
+      display: block;
+      white-space: pre-wrap;
+      margin: 0.8rem 0;
+      border-left: 4px solid #f97316;
+    }
+
+    .example-box {
+      background: #fafcff;
+      border: 1px solid #e2e8f0;
+      border-left: 6px solid #0082ca;
+      padding: 1.2rem 1.5rem;
+      margin-bottom: 1.5rem;
+      border-radius: 0 16px 16px 0;
+    }
+
+    .badge {
+      padding: 0.2rem 0.8rem;
+      border-radius: 40px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .badge-p1 { background: #fee2e2; color: #991b1b; }
+    .badge-p2 { background: #fef3c7; color: #92400e; }
+    .badge-p3 { background: #e0f2fe; color: #075985; }
+
+    textarea {
+      width: 100%;
+      height: 120px;
+      padding: 0.9rem 1rem;
+      border: 1.5px solid #d1d9e6;
+      border-radius: 16px;
+      margin-top: 0.6rem;
+      resize: vertical;
+      font-size: 0.9rem;
+      background: #fafcff;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+    textarea:focus {
+      border-color: #004685;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0, 70, 133, 0.15);
+    }
+
+    .submit-scenario-btn {
+      background: #0082ca;
+      color: white;
+      border: none;
+      padding: 0.55rem 1.8rem;
+      border-radius: 40px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .submit-scenario-btn:hover { background: #0066a0; }
+    .submit-scenario-btn:disabled { background: #94a3b8; cursor: not-allowed; }
+
+    .quiz-question {
+      margin-bottom: 2rem;
+      padding-bottom: 1.2rem;
+      border-bottom: 1px solid #e9eef3;
+    }
+    .quiz-options label {
+      display: flex;
+      align-items: flex-start;
+      padding: 0.7rem 1rem;
+      background: #f8fafc;
+      margin-bottom: 0.4rem;
+      border-radius: 14px;
+      cursor: pointer;
+      border: 1px solid #e2e8f0;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      transition: 0.1s;
+    }
+    .quiz-options label:hover { background: #eef4fa; }
+    .quiz-options input { margin-right: 0.8rem; margin-top: 0.15rem; }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    .modal-content {
+      background: white;
+      padding: 2.2rem 2.5rem;
+      border-radius: 32px;
+      max-width: 620px;
+      width: 92%;
+      border-top: 8px solid #b91c1c;
+    }
+
+    #user-display-email { font-weight: 600; }
+    #user-display-id { opacity: 0.7; font-size: 0.8rem; }
+
+    .sidebar h3 { margin-top: 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; color: #004685; }
+    .sidebar hr { margin: 1rem 0; border: none; border-top: 1px solid #e2e8f0; }
+    .sidebar p { font-size: 0.85rem; }
+    .sidebar .stat-number { font-size: 1.6rem; font-weight: 700; color: #004685; }
+    .sidebar .stat-accent { color: #f97316; }
+
+    @media (max-width: 900px) { .main-container { flex-direction: column; } }
+  </style>
+</head>
+<body oncontextmenu="return false;">
+
+  <!-- ========== SECURITY BANNER ========== -->
+  <div class="security-banner">
+    <span>?? SECURE PROCTORING · Copy/Paste, Alt+Tab, Screenshot blocked</span>
+    <span id="p-status">? SECURE SESSION</span>
+  </div>
+
+  <!-- ========== LOGIN SCREEN ========== -->
+  <div id="login-screen" class="screen active">
+    <div class="login-card">
+      <div class="brand-header">
+        <h1>ALORICA</h1>
+        <p>Operations Support · Windows Enterprise Training</p>
+      </div>
+      <form id="login-form">
+        <div class="form-group">
+          <label for="userid">Corporate Email</label>
+          <input type="email" id="userid" placeholder="your.name@alorica.com" required />
+        </div>
+        <div class="form-group">
+          <label for="password">Employee ID (PIN)</label>
+          <input type="password" id="password" placeholder="e.g. 24896571" required />
+        </div>
+        <div id="login-error">Invalid credentials. Please use your corporate email and Employee ID.</div>
+        <button type="submit" class="btn">Authenticate</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========== PROCTORING MODAL ========== -->
+  <div id="policy-modal" class="modal">
+    <div class="modal-content">
+      <h2 style="color: #b91c1c; margin-bottom: 0.8rem;">?? Enterprise Proctoring</h2>
+      <ul style="line-height: 1.8; margin-bottom: 1.5rem; margin-left: 1.2rem;">
+        <li>Fullscreen required · ESC or tab-switch logs a violation</li>
+        <li>Clipboard & AI tools blocked</li>
+        <li>Complete all 20 scenarios & pass exam (>=80%)</li>
+      </ul>
+      <button class="btn" style="background: #b91c1c;" onclick="enterProctoredEnvironment()">I Accept · Start Assessment</button>
+    </div>
+  </div>
+
+  <!-- ========== PORTAL SCREEN ========== -->
+  <div id="portal-screen" class="screen">
+    <header>
+      <div>
+        <h2>Operations Support Enterprise</h2>
+        <small>Tier-2/3 · Windows Infrastructure & ITSM</small>
+      </div>
+      <div style="text-align:right; font-size:0.9rem;">
+        <div id="user-display-email">user@alorica.com</div>
+        <div id="user-display-id" style="opacity:0.7;">EMP ID: —</div>
+      </div>
+    </header>
+
+    <div class="progress-container">
+      <div class="progress-bar" id="main-progress"></div>
+    </div>
+
+    <div class="main-container">
+      <div class="content-area">
+
+        <!-- OVERVIEW -->
+        <div class="card">
+          <h2>?? Windows Operations & Diagnostics</h2>
+          <p style="line-height:1.6;">Tier-2/3 engineers troubleshoot AD DS, GPO, WMI, IIS, WSUS, Hyper-V, PowerShell, and more. Precise execution of scripts and CLI tools is critical.</p>
+        </div>
+
+        <!-- KNOWLEDGE BASE (30 examples) -->
+        <div class="card">
+          <h2>?? Knowledge Base · 30 Diagnostic SOP Drills</h2>
+          <div id="examples-container"></div>
+        </div>
+
+        <!-- SCENARIOS (20 practical) -->
+        <div class="card">
+          <h2>?? Practical Scenarios · Windows Analysis</h2>
+          <p style="color:#475569; margin-bottom:1.2rem;">Provide multi-step diagnostic & resolution steps for each ticket.</p>
+          <div id="scenarios-container"></div>
+        </div>
+
+        <!-- EXAM -->
+        <div class="card" id="exam-card">
+          <h2>?? Final Enterprise Exam (multi-select)</h2>
+          <p style="color:#475569; margin-bottom:1.2rem;">Select <strong>all</strong> correct options. Passing grade: 80%.</p>
+          <div id="quiz-container"></div>
+          <button class="btn" style="background:#22c55e; margin-top:1.5rem;" onclick="submitExam()">Submit Final Assessment</button>
+        </div>
+      </div>
+
+      <!-- SIDEBAR -->
+      <div class="sidebar">
+        <h3>?? Training Tracker</h3>
+        <div style="margin:1.2rem 0;">
+          <p style="color:#475569;">Scenarios completed</p>
+          <p class="stat-number" id="completed-count">0 / 20</p>
+        </div>
+        <div style="margin:1.2rem 0;">
+          <p style="color:#475569;">Overall progress</p>
+          <p class="stat-number stat-accent" id="completion-percent">0%</p>
+        </div>
+        <hr />
+        <h4 style="font-size:0.8rem; text-transform:uppercase; color:#64748b;">Proctoring</h4>
+        <p style="font-size:0.8rem; color:#4ade80;" id="mon-fs">? Fullscreen Active</p>
+        <p style="font-size:0.8rem; color:#4ade80;" id="mon-clip">? Clipboard Locked</p>
+        <p style="font-size:0.8rem; color:#4ade80;" id="mon-focus">? Focus Verified</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // 1. DATA — 30 KB DRILLS, 20 PRACTICAL SCENARIOS, 10 EXAM QS
+    // ============================================================
+
+    // 30 Knowledge Base Drills with Step-by-Step SOP
+    const advancedExamples = [
+      {
+        id: 1,
+        title: "Active Directory Domain Replication Failure",
+        priority: "P1 - Critical",
+        issue: "Domain controllers fail to replicate directory partitions, causing Kerberos auth discrepancies.",
+        cli: "repadmin /showrepl\nrepadmin /syncall /A /e",
+        sop: "1. Run repadmin /showrepl to identify failing DC partners.\n2. Verify TCP Port 135 and RPC dynamic ports using Test-NetConnection.\n3. Force Kerberos ticket purge and execute force sync via repadmin /syncall /A /e."
+      },
+      {
+        id: 2,
+        title: "Kerberos Ticket Authentication SLA Failure",
+        priority: "P1 - Critical",
+        issue: "Users experience login latency due to expired or corrupt Kerberos ticket caches.",
+        cli: "klist purge\nklist get Krbtgt",
+        sop: "1. Open administrative command prompt and run klist to review tickets.\n2. Purge stale ticket cache using klist purge.\n3. Request new TGT via klist get Krbtgt and re-authenticate."
+      },
+      {
+        id: 3,
+        title: "GPO Processing Latency & Failure",
+        priority: "P2 - High",
+        issue: "New Domain Group Policies fail to apply to target Machine or User Organizational Units.",
+        cli: "gpupdate /force\ngpresult /h C:\\GPO_Report.html",
+        sop: "1. Execute gpupdate /force on target host.\n2. Generate HTML diagnostic report using gpresult /h C:\\GPO_Report.html.\n3. Check report for Group Policy WMI filters or access denial errors."
+      },
+      {
+        id: 4,
+        title: "DNS Cache Corruption & Host Resolution Failure",
+        priority: "P2 - High",
+        issue: "Client machines resolve stale IP addresses for internal application web farms.",
+        cli: "ipconfig /flushdns\nResolve-DnsName -Name app.corp.local -Server 10.0.0.1",
+        sop: "1. Clear client resolver cache with ipconfig /flushdns.\n2. Query authoritative DC DNS server directly using Resolve-DnsName.\n3. Restart 'DNS Client' service via net stop dnscache && net start dnscache."
+      },
+      {
+        id: 5,
+        title: "Windows Update Agent (WSUS) Patch Sync Stalls",
+        priority: "P3 - Moderate",
+        issue: "Endpoint agent fails to report compliance to WSUS server (Error 0x80244007).",
+        cli: "net stop wuauserv\nRemove-Item C:\\Windows\\SoftwareDistribution -Recurse -Force\nnet start wuauserv\nusoctl StartScan",
+        sop: "1. Stop WUAUSERV and BITS services.\n2. Purge C:\\Windows\\SoftwareDistribution cache directory.\n3. Restart services and trigger scan via usoctl StartScan."
+      },
+      {
+        id: 6,
+        title: "IIS Worker Process (w3wp.exe) CPU Spike",
+        priority: "P1 - Critical",
+        issue: "IIS AppPool crashes under heavy requests due to memory leaks in web apps.",
+        cli: "Import-Module WebAdministration\nGet-WebAppPoolState\nRestart-WebAppPool -Name 'DefaultAppPool'",
+        sop: "1. Monitor process ID via Task Manager and correlate with IIS AppPool.\n2. Execute Get-WebAppPoolState in PowerShell.\n3. Recycle offending AppPool with Restart-WebAppPool and collect crash dump."
+      },
+      {
+        id: 7,
+        title: "WMI Corruption & Query Timeout",
+        priority: "P2 - High",
+        issue: "Monitoring agents fail with WMI repository access errors (0x80041002).",
+        cli: "winmgmt /verifyrepository\nwinmgmt /salvagerepository",
+        sop: "1. Verify repository integrity using winmgmt /verifyrepository.\n2. If inconsistent, run winmgmt /salvagerepository.\n3. Restart Winmgmt service and re-bind monitoring agent."
+      },
+      {
+        id: 8,
+        title: "Hyper-V Dynamic Memory Exhaustion",
+        priority: "P2 - High",
+        issue: "Virtual Machine performance drops due to excessive RAM swapping on Hyper-V host.",
+        cli: "Get-VMMemory -VMName 'Prod-Svr01'\nSet-VMMemory -VMName 'Prod-Svr01' -StartupBytes 16GB",
+        sop: "1. Check current host memory allocation with Get-VMMemory.\n2. Adjust Startup/Maximum Bytes dynamically via Set-VMMemory.\n3. Balance host NUMA node node assignments."
+      },
+      {
+        id: 9,
+        title: "DHCP IP Pool Exhaustion",
+        priority: "P1 - Critical",
+        issue: "VLAN workstations fail to acquire dynamic IP addresses (APIPA 169.254.x.x assigned).",
+        cli: "Get-DhcpServerv4FreeIPAddress -ScopeId 192.168.10.0\nReconcile-DhcpServerv4Lease -ScopeId 192.168.10.0",
+        sop: "1. Query active leases and scope statistics in DHCP PowerShell module.\n2. Reduce lease duration or activate DHCP superscope.\n3. Run Reconcile-DhcpServerv4Lease to clear orphan lease records."
+      },
+      {
+        id: 10,
+        title: "Print Spooler Service Crash Loop",
+        priority: "P3 - Moderate",
+        issue: "Spooler service stops unexpectedly, blocking enterprise network printers.",
+        cli: "Stop-Service spooler\nRemove-Item C:\\Windows\\System32\\spool\\PRINTERS\\* -Force\nStart-Service spooler",
+        sop: "1. Stop Spooler service via PowerShell.\n2. Clear corrupt print queue files from C:\\Windows\\System32\\spool\\PRINTERS\\.\n3. Restart Spooler service and re-isolate driver processes."
+      },
+      {
+        id: 11,
+        title: "BitLocker TPM Recovery Key Locked",
+        priority: "P2 - High",
+        issue: "User prompt requires 48-digit BitLocker key after motherboard/firmware change.",
+        cli: "Get-BitLockerVolume -MountPoint 'C:'\nBackup-BitLockerKeyProtector -MountPoint 'C:' -KeyProtectorId '{ID}'",
+        sop: "1. Obtain AD Object GUID or computer name from caller.\n2. Query BitLocker recovery key from Active Directory/Entra ID portal.\n3. Force backup of KeyProtector to AD via PowerShell."
+      },
+      {
+        id: 12,
+        title: "Storage Spaces Direct (S2D) Disk Degraded",
+        priority: "P1 - Critical",
+        issue: "Physical disk failure causes S2D storage pool to enter degraded state.",
+        cli: "Get-PhysicalDisk | Where-Object OperationalStatus -ne 'OK'\nRetire-PhysicalDisk -UniqueId '{ID}'",
+        sop: "1. Identify failed disk via Get-PhysicalDisk.\n2. Mark disk state as Retired using Retire-PhysicalDisk.\n3. Replace drive physically and run Repair-VirtualDisk."
+      },
+      {
+        id: 13,
+        title: "Remote Desktop Services (RDS) Grace Period Expired",
+        priority: "P2 - High",
+        issue: "Users cannot initiate RDP sessions due to missing RDS Licensing Server configuration.",
+        cli: "Get-CimInstance -Namespace root/cimv2/TerminalServices -ClassName Win32_TerminalServiceSetting",
+        sop: "1. Verify RDS licensing mode and server address using CIM instance queries.\n2. Set licensing mode (Per User / Per Device) via Registry/GPO.\n3. Re-bind RDS Host to active RDS Licensing Server."
+      },
+      {
+        id: 14,
+        title: "SMB v3 Network Bandwidth Bottleneck",
+        priority: "P2 - High",
+        issue: "File transfer speeds across enterprise shares drop under 10 MB/s.",
+        cli: "Get-SmbMultichannelConnection\nSet-SmbClientConfiguration -EnableBandwidthThrottling $False",
+        sop: "1. Check Multichannel status via Get-SmbMultichannelConnection.\n2. Verify network interface RSS and RDMA status.\n3. Disable bandwidth throttling and clear SMB client cache."
+      },
+      {
+        id: 15,
+        title: "Windows Firewall Policy Block On Application",
+        priority: "P3 - Moderate",
+        issue: "Custom LOB application blocked by local Defender Firewall rules.",
+        cli: "Get-NetFirewallRule -DisplayName 'LOB-App'\nNew-NetFirewallRule -DisplayName 'LOB-App' -Direction Inbound -Action Allow -Protocol TCP -LocalPort 8080",
+        sop: "1. Audit dropped packets in C:\\Windows\\System32\\LogFiles\\Firewall\\pfirewall.log.\n2. Execute New-NetFirewallRule to create inbound rule for target port.\n3. Verify rule precedence in Local Security Policy."
+      },
+      {
+        id: 16,
+        title: "Windows Remote Management (WinRM) Listener Offline",
+        priority: "P2 - High",
+        issue: "PowerShell Remoting (Enter-PSSession) fails with WS-Management error.",
+        cli: "winrm quickconfig\nTest-WSMan -ComputerName 'Svr02'",
+        sop: "1. Execute winrm quickconfig on target host to enable listeners.\n2. Verify TCP Port 5985/5986 openness via Test-NetConnection.\n3. Set GPO to enable WinRM service startup and remote management."
+      },
+      {
+        id: 17,
+        title: "NTFS Disk Corruption (Dirty Bit Set)",
+        priority: "P1 - Critical",
+        issue: "Volume errors occur on production file storage; chkdsk required.",
+        cli: "fsutil dirty query E:\nchkdsk E: /f /r /x",
+        sop: "1. Check volume dirty bit using fsutil dirty query.\n2. Schedule offline disk check with chkdsk /f /r.\n3. Dismount volume safely or schedule check upon system reboot."
+      },
+      {
+        id: 18,
+        title: "Active Directory Account Lockout Investigation",
+        priority: "P3 - Moderate",
+        issue: "User account locks continuously every 5 minutes.",
+        cli: "Get-WinEvent -LogName 'Security' -FilterXPath \"*[System[EventID=4740]]\"",
+        sop: "1. Query Security Log Event ID 4740 on PDC Emulator DC.\n2. Locate Caller Computer Name causing invalid password submissions.\n3. Clear cached credentials/mapped drives/services on source workstation."
+      },
+      {
+        id: 19,
+        title: "Volume Shadow Copy (VSS) Provider Error",
+        priority: "P2 - High",
+        issue: "Windows Server Backup fails with VSS snapshot creation error.",
+        cli: "vssadmin list writers\nvssadmin list shadows",
+        sop: "1. Run vssadmin list writers to identify failed shadow copy writers.\n2. Restart corresponding VSS services (e.g., System Writer, COM+).\n3. Re-run backup job after writers return to 'Stable' state."
+      },
+      {
+        id: 20,
+        title: "High System Idle Process / DPC Latency",
+        priority: "P2 - High",
+        issue: "Server experiences micro-stutters and high CPU due to faulty hardware drivers.",
+        cli: "Get-WMIObject Win32_PerfFormattedData_PerfOS_Processor | Select-Object Name, PercentDPCTime",
+        sop: "1. Measure DPC and Interrupt percentages using WMI performance counters.\n2. Analyze trace logs using Windows Performance Analyzer (WPA).\n3. Update network card / storage controller drivers to latest vendor build."
+      },
+      {
+        id: 21,
+        title: "Cluster Shared Volume (CSV) Paused State",
+        priority: "P1 - Critical",
+        issue: "Failover Cluster CSV enters 'Paused' state, blocking VM disk access.",
+        cli: "Get-ClusterSharedVolume | Select-Object Name, State\nResume-ClusterResource -Name 'Cluster Disk 1'",
+        sop: "1. Execute Get-ClusterSharedVolume in Failover Cluster PowerShell module.\n2. Inspect storage network connectivity and SAN paths (MPIO).\n3. Run Resume-ClusterResource to bring CSV back online."
+      },
+      {
+        id: 22,
+        title: "Enterprise Certificate Auto-Enrollment Failure",
+        priority: "P2 - High",
+        issue: "Computer certificates fail to auto-enroll from Active Directory Certificate Services.",
+        cli: "certutil -pulse\ncertmgr.msc",
+        sop: "1. Trigger immediate policy pulse using certutil -pulse.\n2. Inspect Application Event Log for Event ID 13 or 6.\n3. Verify PKI Certificate Template security permissions (Read, Enroll, Autoenroll)."
+      },
+      {
+        id: 23,
+        title: "Windows Event Log Corruption / Service Failure",
+        priority: "P3 - Moderate",
+        issue: "Windows Event Log service refuses to start; security auditing halted.",
+        cli: "net stop eventlog\nRename-Item C:\\Windows\\System32\\winevt\\Logs\\Security.evtx Security.old",
+        sop: "1. Stop EventLog service (or boot in Safe Mode if locked).\n2. Archive and rename corrupt .evtx log files.\n3. Start EventLog service to re-initialize clear log databases."
+      },
+      {
+        id: 24,
+        title: "Task Scheduler Job Failure (0x80070002)",
+        priority: "P3 - Moderate",
+        issue: "Automated PowerShell maintenance script fails to execute on schedule.",
+        cli: "Get-ScheduledTask -TaskName 'OpsMaintenance' | Get-ScheduledTaskInfo",
+        sop: "1. Retrieve last run result via Get-ScheduledTaskInfo.\n2. Check service account 'Logon as a batch job' privilege in Local Security Policy.\n3. Ensure working directory and execution path syntax are absolute."
+      },
+      {
+        id: 25,
+        title: "Host File Tampering / Malicious Resolution",
+        priority: "P1 - Critical",
+        issue: "Workstation redirected to suspicious IP addresses due to hijacked hosts file.",
+        cli: "Get-Content C:\\Windows\\System32\\drivers\\etc\\hosts\nSet-Content C:\\Windows\\System32\\drivers\\etc\\hosts '127.0.0.1 localhost'",
+        sop: "1. Inspect hosts file content using Get-Content.\n2. Reset hosts file to system default state.\n3. Run Endpoint Protection full antimalware scan on affected machine."
+      },
+      {
+        id: 26,
+        title: "Windows Subsystem for Linux (WSL2) Kernel Hang",
+        priority: "P3 - Moderate",
+        issue: "Developer machine locks up when invoking wsl.exe commands.",
+        cli: "wsl --shutdown\nwsl --status",
+        sop: "1. Issue full WSL shutdown command wsl --shutdown.\n2. Update WSL kernel using wsl --update.\n3. Restart Hyper-V Host Compute Service (vmcompute)."
+      },
+      {
+        id: 27,
+        title: "Active Directory NTDS Database Fragmentation",
+        priority: "P2 - High",
+        issue: "NTDS.dit database bloat reduces Active Directory query performance.",
+        cli: "ntdsutil\nactivate instance ntds\nfiles\ncompact to C:\\NTDS_Compact",
+        sop: "1. Boot DC into Directory Services Restore Mode (DSRM).\n2. Execute ntdsutil offline defragmentation/compaction process.\n3. Replace original ntds.dit file and restart Active Directory Domain Services."
+      },
+      {
+        id: 28,
+        title: "MPIO Path Failover Failure",
+        priority: "P1 - Critical",
+        issue: "Server loses storage access when primary SAN fiber path goes down.",
+        cli: "mpclaim -v C:\\mpio_report.txt\nGet-MSASMDSMSupportedHW",
+        sop: "1. Generate MPIO diagnostic report with mpclaim.\n2. Verify Microsoft DSM hardware compatibility and path settings.\n3. Re-seat fiber channel cables and update HBA card firmware."
+      },
+      {
+        id: 29,
+        title: "Windows Defender Service Disabled by Policy",
+        priority: "P2 - High",
+        issue: "Antivirus protection inactive due to conflicting Group Policy setting.",
+        cli: "Get-MpComputerStatus\nSet-MpPreference -DisableRealtimeMonitoring $False",
+        sop: "1. Verify current Defender status via Get-MpComputerStatus.\n2. Remove contradictory registry key under HKLM\\Software\\Policies\\Microsoft\\Windows Defender.\n3. Force GPO update and re-enable real-time protection."
+      },
+      {
+        id: 30,
+        title: "System Drive (C:) Space Exhaustion",
+        priority: "P1 - Critical",
+        issue: "Windows Server freezes due to 0 MB available on primary OS drive.",
+        cli: "Get-ChildItem C:\\Windows\\Temp | Remove-Item -Recurse -Force\nDISM.exe /Online /Cleanup-Image /StartComponentCleanup",
+        sop: "1. Purge C:\\Windows\\Temp and C:\\Users\\*\\AppData\\Local\\Temp.\n2. Execute DISM component cleanup to remove superseded Windows Updates.\n3. Move pagefile.sys or crash dump target to secondary volume."
+      }
+    ];
+
+    // 20 Scenario Exercises for User Submission
+    const scenarioExercises = [
+      {
+        id: 1,
+        title: "Scenario 1: Active Directory User Login Latency across WAN",
+        badge: "P2 - High",
+        badgeClass: "badge-p2",
+        description: "Users at a remote site report 3-minute login delays. Authentication traffic is traversing a slow VPN link to the main Data Center instead of local DCs.",
+        question: "How do you diagnose and resolve this AD Site / Subnet mapping issue using Active Directory Sites and Services?"
+      },
+      {
+        id: 2,
+        title: "Scenario 2: Critical Web Application Returning HTTP 503 Service Unavailable",
+        badge: "P1 - Critical",
+        badgeClass: "badge-p1",
+        description: "An internal payroll web app is throwing 503 errors. Initial checks show IIS running, but the associated Application Pool stops immediately upon request.",
+        question: "Outline the step-by-step diagnostic process in Event Viewer and IIS to fix AppPool rapid fail protection crashes."
+      },
+      {
+        id: 3,
+        title: "Scenario 3: Corrupt Windows System Files Preventing Boot (SFC/DISM)",
+        badge: "P2 - High",
+        badgeClass: "badge-p2",
+        description: "A core management server throws BSoD 0xC000021A on boot. Safe mode works, but standard SFC /scannow fails claiming corrupted repair source.",
+        question: "Detail the offline DISM cleanup and repair commands using a mounted Windows Server ISO."
+      },
+      {
+        id: 4,
+        title: "Scenario 4: WSUS Patch Distribution Failure across Branch Offices",
+        badge: "P3 - Moderate",
+        badgeClass: "badge-p3",
+        description: "Branch office workstations fail to download WSUS updates, saturating internet bandwidth by attempting to reach Microsoft Update directly.",
+        question: "Provide the GPO configuration and PowerShell fix to force clients back to internal WSUS/Delivery Optimization."
+      },
+      {
+        id: 5,
+        title: "Scenario 5: Kerberos Double-Hop Authentication Failure (SPN/Delegation)",
+        badge: "P2 - High",
+        badgeClass: "badge-p2",
+        description: "An IIS web app attempting to query an backend SQL server fails with NTLM fallback / Access Denied when users connect remotely.",
+        question: "How do you configure Service Principal Names (setspn) and Kerberos Constrained Delegation to solve double-hop issues?"
+      },
+      {
+        id: 6,
+        title: "Scenario 6: Hyper-V Virtual Machine Network Isolation Fault",
+        badge: "P1 - Critical",
+        badgeClass: "badge-p1",
+        description: "After host reboot, 10 VMs on Virtual Switch 'Production-vSwitch' lose connectivity to external networks despite active link status.",
+        question: "Explain how to diagnose NVGRE/VLAN tagging errors and reset virtual network adapters via PowerShell."
+      },
+      {
+        id: 7,
+        title: "Scenario 7: DNS Dynamic Update Security Misconfiguration",
+        badge: "P2 - High",
+        badgeClass: "badge-p2",
+        description: "Non-domain devices are overwriting DNS records for domain-joined servers, creating IP conflicts and spoofing risks.",
+        question: "Describe how to configure Dynamic Updates to 'Secure Only' and enforce DHCP Name Protection."
+      },
+      {
+        id: 8,
+        title: "Scenario 8: Group Policy Loopback Processing Failure on RD Session Host",
+        badge: "P2 - High",
+        badgeClass: "badge-p2",
+        description: "User GPO settings are not applying to Remote Desktop Session Host users, leaking administrative tools to standard users.",
+        question: "Detail how Loopback Processing (Replace vs Merge mode) resolves policy application on RDS hosts."
+      },
+      {
+        id: 9,
+        title: "Scenario 9: Distributed File System (DFS) Replication Backlog Build-Up",
+        badge: "P2 - High",
+        badgeClass: "badge-p2",
+        description: "Files edited in Site A do not appear in Site B. `dfsrdiag backlog` shows over 15,000 pending file transfers.",
+        question: "How do you troubleshoot DFSR staging folder size limits, RPC connectivity, and dirty shutdown state?"
+      },
+      {
+        id: 10,
+        title: "Scenario 10: IIS SSL/TLS Cipher Suite Mismatch",
+        badge: "P2 - High",
+        badgeClass: "badge-p2",
+        description: "Legacy API client cannot establish TLS connection to secure web service after server hardening audit.",
+        question: "Detail the steps to diagnose TLS protocol mismatches using SCHANNEL logging and SCHANNEL registry modifications."
+      },
+      {
+        id: 11,
+        title: "Scenario 11: PowerShell Remoting Connection Blocked by WinRM TrustedHosts",
+        badge: "P3 - Moderate",
+        badgeClass: "badge-p3",
+        description: "An admin attempt to execute Invoke-Command against a non-domain workgroup server fails with WinRM security trust errors.",
+        question: "Provide the CLI commands to configure WSMan TrustedHosts safely and initiate authenticated remote sessions."
+      },
+      {
+        id: 12,
+        title: "Scenario 12: High CPU Caused by Windows Defender Antimalware Executable",
+        badge: "P3 - Moderate",
+        badgeClass: "badge-p3",
+        description: "MsMpEng.exe consumes 100% CPU on a database server during peak business hours due to real-time SQL data directory scans.",
+        question: "How do you configure Defender process and path exclusions without compromising system security?"
+      },
+      {
+        id: 13,
+        title: "Scenario 13: iSCSI Storage Target Disconnect on Database Cluster",
+        badge: "P1 - Critical",
+        badgeClass: "badge-p1",
+        description: "SQL Cluster loses access to LUNs during high IOPS write operations, dropping database tables offline.",
+        question: "Outline the steps to verify iSCSI Initiator sessions, Jumbo Frames (MTU 9000), and MPIO auto-claim configuration."
+      },
+      {
+        id: 14,
+        title: "Scenario 14: Certificate Authority (CA) CRL Distribution Point (CDP) Unreachable",
+        badge: "P1 - Critical",
+        badgeClass: "badge-p1",
+        description: "All VPN and Smart Card authentications fail across the organization because the Certificate Revocation List expired.",
+        question: "How do you publish a fresh CRL manually and restore CDP HTTP/LDAP availability?"
+      },
+      {
+        id: 15,
+        title: "Scenario 15: Print Server Kernel-Mode Driver BSOD Crash",
+        badge: "P2 - High",
+        badgeClass: "badge-p2",
+        description: "Print Spooler crashes repeatedly, taking down all network print queues whenever a specific printer driver is invoked.",
+        question: "Detail how to configure Print Driver Isolation mode and remove corrupt driver packages from System32 driver store."
+      },
+      {
+        id: 16,
+        title: "Scenario 16: Active Directory Schema Update Failure during OS Upgrade",
+        badge: "P1 - Critical",
+        badgeClass: "badge-p1",
+        description: "adprep /forestprep fails halfway through schema extension, leaving AD in a partially updated state.",
+        question: "Detail the contingency and recovery procedure for AD Schema Master FSMO role restoration."
+      },
+      {
+        id: 17,
+        title: "Scenario 17: User Profile Service Failed the Sign-in (Temp Profile Loop)",
+        badge: "P3 - Moderate",
+        badgeClass: "badge-p3",
+        description: "Users log into Windows workstations and receive temporary profiles, losing access to desktop documents.",
+        question: "How do you resolve temporary profile issues by modifying ProfileList registry keys and SIDs?"
+      },
+      {
+        id: 18,
+        title: "Scenario 18: Azure AD / Entra ID Connect Sync Stalled",
+        badge: "P2 - High",
+        badgeClass: "badge-p2",
+        description: "Newly created Active Directory users are not syncing to Microsoft 365, delaying onboarding.",
+        question: "Explain how to diagnose sync errors in Synchronization Service Manager and trigger delta sync via PowerShell."
+      },
+      {
+        id: 19,
+        title: "Scenario 19: Storage Pool Physical Drive Misbehaving / Predictive Failure",
+        badge: "P2 - High",
+        badgeClass: "badge-p2",
+        description: "Storage Spaces reports a drive in 'Predictive Failure' status, threatening virtual disk integrity.",
+        question: "Detail the steps to safely remove, retire, and replace a failing disk in a Windows Storage Pool."
+      },
+      {
+        id: 20,
+        title: "Scenario 20: Windows Server Ransomware Isolation Emergency Protocol",
+        badge: "P1 - Critical",
+        badgeClass: "badge-p1",
+        description: "Automated alert flags suspicious mass file renaming on a shared file server (potential ransomware).",
+        question: "Outline the immediate 5-step incident response playbook (network isolation, process kill, ticket creation, logging, management escalation)."
+      }
+    ];
+
+    // 10 Complex Multi-Select Exam Questions
+    const quizQuestions = [
+      {
+        id: 1,
+        question: "Exam Q1: An enterprise DC fails to replicate with partners. 'repadmin /showrepl' reports Error 8606 (Insufficient attributes). Which actions are required? (Select ALL that apply)",
+        options: [
+          "A) Enable 'Strict Replication Consistency' across domain controllers",
+          "B) Demote and re-promote the affected domain controller using dcpromo / force cleanup",
+          "C) Increase the Lingering Object Liquidate Registry key and run repadmin /removelingeringobjects",
+          "D) Run ipconfig /flushdns on the local workstation",
+          "E) Reformat all file server storage volumes"
+        ],
+        correct: [0, 2]
+      },
+      {
+        id: 2,
+        question: "Exam Q2: Which steps must be taken to resolve an IIS Application Pool rapid fail protection error caused by invalid service account credentials? (Select ALL that apply)",
+        options: [
+          "A) Update the identity credentials in IIS AppPool Advanced Settings",
+          "B) Grant the AppPool identity account 'Logon as a batch job' / 'Logon as a service' rights",
+          "C) Delete C:\\Windows\\System32\\drivers\\etc\\hosts",
+          "D) Reset the password in Active Directory Domain Services",
+          "E) Reinstall the Web Server (IIS) role completely"
+        ],
+        correct: [0, 1, 3]
+      },
+      {
+        id: 3,
+        question: "Exam Q3: According to Enterprise ITSM standards, which procedures are mandatory during a P1 Outage Incident Lifecycle? (Select ALL that apply)[cite: 1]",
+        options: [
+          "A) Initiate work notes and update state to 'In Progress' to stop Response SLA clock[cite: 1]",
+          "B) Escalate to L3/Vendor if resolution exceeds immediate operational capability[cite: 1]",
+          "C) Wait 3 days before contacting stakeholders to avoid distraction[cite: 1]",
+          "D) Conduct Root Cause Analysis (RCA) and link to a Problem Record (PRB) post-resolution[cite: 1]",
+          "E) Change ticket status to 'Pending Customer' without user contact[cite: 1]"
+        ],
+        correct: [0, 1, 3]
+      },
+      {
+        id: 4,
+        question: "Exam Q4: A Windows Server volume suffers file system corruption and has its 'dirty bit' set. What are valid recovery steps? (Select ALL that apply)",
+        options: [
+          "A) Run fsutil dirty query <DriveLetter>: to verify volume status",
+          "B) Run chkdsk /f /r to repair file system structures and recover readable data",
+          "C) Schedule an offline disk check if the volume is currently in use by the OS",
+          "D) Force delete the System Volume Information directory manually",
+          "E) Run repadmin /syncall /A /e"
+        ],
+        correct: [0, 1, 2]
+      },
+      {
+        id: 5,
+        question: "Exam Q5: Which commands successfully clear and refresh client-side authentication and network caches on Windows endpoints? (Select ALL that apply)",
+        options: [
+          "A) klist purge",
+          "B) ipconfig /flushdns",
+          "C) ntdsutil compact",
+          "D) certutil -pulse",
+          "E) gpupdate /force"
+        ],
+        correct: [0, 1, 3, 4]
+      },
+      {
+        id: 6,
+        question: "Exam Q6: When diagnosing a double-hop Kerberos delegation failure in a 3-tier web architecture, which steps are mandatory? (Select ALL that apply)",
+        options: [
+          "A) Set valid Service Principal Names (SPNs) on target service accounts using setspn -S",
+          "B) Configure Kerberos Constrained Delegation (KCD) in Active Directory Users and Computers",
+          "C) Enable NTLMv1 authentication globally via Group Policy",
+          "D) Verify trust for delegation attributes on the web server computer/service account",
+          "E) Disable Windows Firewall permanently across all subnets"
+        ],
+        correct: [0, 1, 3]
+      },
+      {
+        id: 7,
+        question: "Exam Q7: A DHCP Scope has reached 100% address utilization. How can an administrator recover functionality immediately? (Select ALL that apply)",
+        options: [
+          "A) Execute Reconcile-DhcpServerv4Lease to clear orphan lease records",
+          "B) Decrease the scope lease time duration for active devices",
+          "C) Configure a DHCP Superscope or add a secondary subnet pool",
+          "D) Disable the DHCP Server service completely",
+          "E) Reinstall active directory schema files"
+        ],
+        correct: [0, 1, 2]
+      },
+      {
+        id: 8,
+        question: "Exam Q8: What steps are involved in resolving a corrupted Windows Event Log service that refuses to start? (Select ALL that apply)",
+        options: [
+          "A) Stop the EventLog service or boot into Safe Mode",
+          "B) Navigate to C:\\Windows\\System32\\winevt\\Logs and archive/rename corrupt .evtx files",
+          "C) Run Set-ExecutionPolicy Unrestricted on the primary domain controller",
+          "D) Start the Windows Event Log service to generate clean log database files",
+          "E) Delete the NTDS.dit database file"
+        ],
+        correct: [0, 1, 3]
+      },
+      {
+        id: 9,
+        question: "Exam Q9: In ITIL-aligned ticketing tools, what actions apply under the '3-Touch Rule' for inactive customers? (Select ALL that apply)[cite: 1]",
+        options: [
+          "A) Contact customer on Day 1, Day 2, and Day 3[cite: 1]",
+          "B) If no response by Day 4, force close ticket as 'Resolved - Inactive User'[cite: 1]",
+          "C) Instantly close ticket within 5 minutes of opening[cite: 1]",
+          "D) Pause SLA clock by setting state to 'Pending Customer' during contact periods[cite: 1]",
+          "E) Delete all incident logs from database[cite: 1]"
+        ],
+        correct: [0, 1, 3]
+      },
+      {
+        id: 10,
+        question: "Exam Q10: A Failover Cluster CSV (Cluster Shared Volume) is stuck in 'Paused' state. Which troubleshooting actions are valid? (Select ALL that apply)",
+        options: [
+          "A) Verify physical fiber channel/iSCSI SAN storage network connectivity",
+          "B) Execute Resume-ClusterResource to attempt bringing the CSV back online",
+          "C) Check MPIO multi-path driver status with mpclaim",
+          "D) Run repadmin /syncall to repair local disks",
+          "E) Re-promote the cluster node to Active Directory Schema Master"
+        ],
+        correct: [0, 1, 2]
+      }
+    ];
+
+    // ============================================================
+    // 2. STATE MANAGEMENT
+    // ============================================================
+    let completedScenarios = new Set();
+
+    // ============================================================
+    // 3. RENDER FUNCTIONS
+    // ============================================================
+    function renderExamples() {
+      const container = document.getElementById('examples-container');
+      container.innerHTML = advancedExamples.map(ex => `
+        <div class="example-box">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+            <strong style="color:#004685;">#${ex.id} – ${ex.title}</strong>
+            <span class="badge ${ex.priority.includes('P1')?'badge-p1':ex.priority.includes('P2')?'badge-p2':'badge-p3'}">${ex.priority.split(' ')[0]}</span>
+          </div>
+          <p style="font-size:0.9rem; margin-bottom:0.5rem;"><strong>Issue:</strong> ${ex.issue}</p>
+          <pre><code>${ex.cli}</code></pre>
+          <p style="font-size:0.85rem; background:#f1f5f9; padding:0.6rem 1rem; border-radius:12px; margin-top:0.5rem; line-height:1.5;"><strong>Step-by-Step SOP:</strong><br/>${ex.sop.replace(/\n/g, '<br/>')}</p>
+        </div>
+      `).join('');
+    }
+
+    function renderScenarios() {
+      const container = document.getElementById('scenarios-container');
+      container.innerHTML = scenarioExercises.map(sc => `
+        <div class="card" style="border:1px solid #e2e8f0; margin-bottom:1.5rem; border-left:4px solid #0082ca;" id="sc-card-${sc.id}">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="color:#004685; font-size:1rem;">${sc.title}</h3>
+            <span class="badge ${sc.badgeClass}">${sc.badge}</span>
+          </div>
+          <p style="font-size:0.9rem; margin:0.6rem 0 0.4rem;">${sc.description}</p>
+          <p style="font-weight:600; font-size:0.9rem; color:#0f172a;">${sc.question}</p>
+          <textarea id="sc-input-${sc.id}" placeholder="Provide detailed technical diagnostic and resolution steps..."></textarea>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.6rem;">
+            <button class="submit-scenario-btn" onclick="submitScenario(${sc.id})">Submit Analysis</button>
+            <span id="sc-status-${sc.id}" style="font-size:0.85rem; color:#64748b;">? Pending</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderQuiz() {
+      const container = document.getElementById('quiz-container');
+      container.innerHTML = quizQuestions.map(q => {
+        const opts = q.options.map((opt, idx) => `
+          <label>
+            <input type="checkbox" name="q-${q.id}" value="${idx}" />
+            <span>${opt}</span>
+          </label>
+        `).join('');
+        return `
+          <div class="quiz-question" id="quiz-q-${q.id}">
+            <p style="font-weight:600; margin-bottom:0.6rem;">${q.question}</p>
+            <div class="quiz-options">${opts}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ============================================================
+    // 4. INTERACTIONS & LOGIC
+    // ============================================================
+    function submitScenario(id) {
+      const val = document.getElementById(`sc-input-${id}`).value.trim();
+      const status = document.getElementById(`sc-status-${id}`);
+      if (val.length < 15) {
+        alert('Please provide a comprehensive technical response (minimum 15 characters).');
+        return;
+      }
+      completedScenarios.add(id);
+      status.innerHTML = '? Submitted';
+      status.style.color = '#22c55e';
+      status.style.fontWeight = 'bold';
+      document.getElementById(`sc-card-${id}`).style.borderLeftColor = '#22c55e';
+      updateProgress();
+    }
+
+    function updateProgress() {
+      const count = completedScenarios.size;
+      document.getElementById('completed-count').innerText = `${count} / 20`;
+      const pct = Math.round((count / 20) * 100);
+      document.getElementById('completion-percent').innerText = `${pct}%`;
+      document.getElementById('main-progress').style.width = `${pct}%`;
+    }
+
+    function submitExam() {
+      let score = 0;
+      quizQuestions.forEach(q => {
+        const checked = Array.from(document.querySelectorAll(`input[name="q-${q.id}"]:checked`)).map(cb => parseInt(cb.value));
+        const correct = q.correct;
+        const ok = checked.length === correct.length && checked.every(v => correct.includes(v));
+        if (ok) score++;
+      });
+      const pct = Math.round((score / quizQuestions.length) * 100);
+      alert(pct >= 80 ? `?? PASSED! Score: ${pct}%` : `? FAILED. Score: ${pct}% (>=80% required)`);
+    }
+
+    // ============================================================
+    // 5. PROCTORING & AUTH SETUP
+    // ============================================================
+    function setupProctoring() {
+      document.addEventListener('visibilitychange', () => {
+        const stat = document.getElementById('p-status');
+        const focus = document.getElementById('mon-focus');
+        if (document.hidden) {
+          if (stat) { stat.innerText = '?? TAB SWITCH DETECTED'; stat.style.color = '#ef4444'; }
+          if (focus) { focus.innerText = '? Focus Lost'; focus.style.color = '#ef4444'; }
+        } else {
+          if (stat) { stat.innerText = '? SECURE SESSION'; stat.style.color = '#4ade80'; }
+          if (focus) { focus.innerText = '? Focus Verified'; focus.style.color = '#4ade80'; }
+        }
+      });
+
+      document.addEventListener('copy', (e) => e.preventDefault());
+      document.addEventListener('paste', (e) => e.preventDefault());
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'PrintScreen' || (e.ctrlKey && (e.key === 'p' || e.key === 'c' || e.key === 'v'))) {
+          e.preventDefault();
+        }
+      });
+    }
+
+    function enterProctoredEnvironment() {
+      document.getElementById('policy-modal').style.display = 'none';
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    }
+
+    document.getElementById('login-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('userid').value.trim();
+      const empId = document.getElementById('password').value.trim();
+
+      if (email && empId) {
+        document.getElementById('login-screen').classList.remove('active');
+        document.getElementById('portal-screen').classList.add('active');
+        document.getElementById('user-display-email').innerText = email;
+        document.getElementById('user-display-id').innerText = `EMP ID: ${empId}`;
+        document.getElementById('policy-modal').style.display = 'flex';
+      } else {
+        document.getElementById('login-error').style.display = 'block';
+      }
+    });
+
+    // Initialize Views
+    window.addEventListener('DOMContentLoaded', () => {
+      renderExamples();
+      renderScenarios();
+      renderQuiz();
+      setupProctoring();
+    });
+  </script>
+</body>
+</html>
